@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  studentId String?  @unique
+  name      String?
+  password  String
+  role      String   @default("STUDENT") // ADMIN or STUDENT
+  isFirstLogin Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  results   Result[]
+  courses   Course[] @relation("CourseToStudent")
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  students    User[]   @relation("CourseToStudent")
+  exams       Exam[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Exam {
+  id             String     @id @default(cuid())
+  title          String
+  courseId       String
+  course         Course     @relation(fields: [courseId], references: [id])
+  durationMins   Int        @default(60)
+  passingMarks   Int        @default(40)
+  randomize      Boolean    @default(true)
+  negativeMarking Boolean    @default(false)
+  questions      Question[]
+  results        Result[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Question {
+  id          String   @id @default(cuid())
+  examId      String
+  exam        Exam     @relation(fields: [examId], references: [id])
+  text        String
+  explanation String?
+  options     Option[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Option {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
+  text       String
+  isCorrect  Boolean  @default(false)
+}
+
+model Result {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  examId        String
+  exam          Exam     @relation(fields: [examId], references: [id])
+  score         Int
+  totalMarks    Int
+  percentage    Float
+  passed        Boolean
+  tabSwitchCount Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
